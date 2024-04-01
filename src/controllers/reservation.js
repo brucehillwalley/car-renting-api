@@ -1,15 +1,14 @@
-"use strict"
+"use strict";
 /* -------------------------------------------------------
     NODEJS EXPRESS | CLARUSWAY FullStack Team
 ------------------------------------------------------- */
 // Reservation Controller:
 
-const Reservation = require('../models/reservation')
+const Reservation = require("../models/reservation");
 
 module.exports = {
-
-    list: async (req, res) => {
-        /*
+  list: async (req, res) => {
+    /*
             #swagger.tags = ["Reservations"]
             #swagger.summary = "List Reservations"
             #swagger.description = `
@@ -23,17 +22,17 @@ module.exports = {
             `
         */
 
-        const data = await res.getModelList(Reservation)
+    const data = await res.getModelList(Reservation);
 
-        res.status(200).send({
-            error: false,
-            details: await res.getModelListDetails(Reservation),
-            data
-        })
-    },
+    res.status(200).send({
+      error: false,
+      details: await res.getModelListDetails(Reservation),
+      data,
+    });
+  },
 
-    create: async (req, res) => {
-        /*
+  create: async (req, res) => {
+    /*
             #swagger.tags = ["Reservations"]
             #swagger.summary = "Create Reservation"
             #swagger.parameters['body'] = {
@@ -45,29 +44,35 @@ module.exports = {
             }
         */
 
-        const data = await Reservation.create(req.body)
+    if ((!req.body.isAdmin && !req.body.isStaff) || !req.body?.userId) {
+      req.body.userId = req.user._id;
+    }
 
-        res.status(201).send({
-            error: false,
-            data
-        })
-    },
+    req.body.createdId = req.user._id;
+    req.body.updatedId = req.user._id;
 
-    read: async (req, res) => {
-        /*
+    const data = await Reservation.create(req.body);
+
+    res.status(201).send({
+      error: false,
+      data,
+    });
+  },
+
+  read: async (req, res) => {
+    /*
             #swagger.tags = ["Reservations"]
             #swagger.summary = "Get Single Reservation"
         */
 
-        res.status(200).send({
-            error: false,
-            data
-        })
+    res.status(200).send({
+      error: false,
+      data,
+    });
+  },
 
-    },
-
-    update: async (req, res) => {
-        /*
+  update: async (req, res) => {
+    /*
             #swagger.tags = ["Reservations"]
             #swagger.summary = "Update Reservation"
             #swagger.parameters['body'] = {
@@ -79,26 +84,29 @@ module.exports = {
             }
         */
 
-        res.status(202).send({
-            error: false,
-            data,
-            new: await Reservation.findOne({ _id: req.params.id })
-        })
+    if (!req.body.isAdmin) {
+      delete req.body.userId;
+    }
+    req.body.updatedId = req.user._id;
 
-    },
+    res.status(202).send({
+      error: false,
+      data,
+      new: await Reservation.findOne({ _id: req.params.id }),
+    });
+  },
 
-    delete: async (req, res) => {
-        /*
+  delete: async (req, res) => {
+    /*
             #swagger.tags = ["Reservations"]
             #swagger.summary = "Delete Reservation"
         */
 
-        const data = await Reservation.deleteOne({ _id: req.params.id })
+    const data = await Reservation.deleteOne({ _id: req.params.id });
 
-        res.status(data.deletedCount ? 204 : 404).send({
-            error: !data.deletedCount,
-            data
-        })
-
-    },
-}
+    res.status(data.deletedCount ? 204 : 404).send({
+      error: !data.deletedCount,
+      data,
+    });
+  },
+};
