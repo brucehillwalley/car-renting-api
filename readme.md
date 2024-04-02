@@ -1,4 +1,8 @@
 # RENT A CAR API
+#eklenecekler
+  - deletedAt fields
+  - reservazyon iptali onayı
+  - 
 
 ### ERD:
 

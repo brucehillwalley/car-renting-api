@@ -73,6 +73,10 @@ const CarSchema = new mongoose.Schema({
         type:Boolean,
         default:true
     },
+    color:{
+        type:String,
+        trim:true
+    },
     createdId:{
         type:mongoose.Schema.Types.ObjectId,
         ref:'User',
@@ -83,12 +87,19 @@ const CarSchema = new mongoose.Schema({
         ref:'User',
         required:true
     },
+    deletedAt:{     //?SOFT DELETE
+        type:Date,
+        default:null,
+
+    }
 
 
     
 }, {    collection: 'cars'
      ,timestamps: true })
-
 /* ------------------------------------------------------- */
+// Index
+CarSchema.index({ brand: 1, model: 1 });
+// index yaparak aramayı hızlandırabiliriz
 /* ------------------------------------------------------- */
 module.exports = mongoose.model('Car', CarSchema)

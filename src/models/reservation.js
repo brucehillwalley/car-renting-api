@@ -52,6 +52,11 @@ const ReservationSchema = mongoose.Schema({
         ref:'User',
         required:true
     },
+    deletedAt:{     //?SOFT DELETE
+        type:Date,
+        default:null,
+
+    }
 }, {
     collection: 'reservations',
     timestamps: true

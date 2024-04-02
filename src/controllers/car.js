@@ -22,11 +22,11 @@ module.exports = {
             `
         */
 
-    const data = await res.getModelList(Car);
+    const data = await res.getModelList(Car, {deletedAt: null});
 
     res.status(200).send({
       error: false,
-      details: await res.getModelListDetails(Car),
+      details: await res.getModelListDetails(Car, {deletedAt: null}),
       data,
     });
   },
@@ -61,7 +61,7 @@ module.exports = {
             #swagger.tags = ["Cars"]
             #swagger.summary = "Get Single Car"
         */
-    const data = await Car.findOne({ _id: req.params.id });
+    const data = await Car.findOne({ _id: req.params.id }, {deletedAt: null});
 
     res.status(200).send({
       error: false,

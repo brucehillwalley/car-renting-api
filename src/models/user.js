@@ -78,6 +78,11 @@ const UserSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    deletedAt:{     //?SOFT DELETE
+        type:Date,
+        default:null,
+
+    }
 
 }, { collection: 'users', timestamps: true })
 

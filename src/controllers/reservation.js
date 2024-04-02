@@ -22,11 +22,11 @@ module.exports = {
             `
         */
 
-    const data = await res.getModelList(Reservation);
+    const data = await res.getModelList(Reservation, {deletedAt: null});
 
     res.status(200).send({
       error: false,
-      details: await res.getModelListDetails(Reservation),
+      details: await res.getModelListDetails(Reservation, {deletedAt: null}),
       data,
     });
   },
@@ -65,7 +65,9 @@ module.exports = {
             #swagger.tags = ["Reservations"]
             #swagger.summary = "Get Single Reservation"
         */
-
+    // deletedAt alanı null ise rezervasyon var
+    const data = await Reservation.findOne({ _id: req.params.id }, {deletedAt: null});
+   
     res.status(200).send({
       error: false,
       data,
@@ -103,11 +105,43 @@ module.exports = {
             #swagger.summary = "Delete Reservation"
         */
 
-    const data = await Reservation.deleteOne({ _id: req.params.id });
+    // const data = await Reservation.deleteOne({ _id: req.params.id });
 
-    res.status(data.deletedCount ? 204 : 404).send({
-      error: !data.deletedCount,
-      data,
+    // res.status(data.deletedCount ? 204 : 404).send({
+    //   error: !data.deletedCount,
+    //   data,
+    // });
+
+    const data = await Reservation.updateOne({ _id: req.params.id }, { deletedAt: new Date() });
+    if(!data){
+      return res.status(404).send({error: true, message: "Reservation not found"})
+    }
+    res.status(204).send({
+      error: false,
+      data
     });
+    //? soft delete işlemi yapıldı.
+
   },
+  listDeleted: async (req, res) => {
+    /*
+            #swagger.tags = ["Reservations"]
+            #swagger.summary = "List Deleted Reservations"
+            #swagger.description = `
+                You can send query with endpoint for filter[], search[], sort[], page and limit.
+                <ul> Examples:
+                    <li>URL/?<b>filter[field1]=value1&filter[field2]=value2</b></li>
+                    <li>URL/?<b>search[field1]=value1&search[field2]=value2</b></li>
+                    <li>URL/?<b>sort[field1]=asc&sort[field2]=desc</b></li>
+                    <li>URL/?<b>page=2&limit=1</b></li>
+                </ul>
+            `
+        */    
+       const data = await res.getModelList(Reservation, {deletedAt: {$ne: null}});
+       res.status(200).send({
+        error: false,
+        details: await res.getModelListDetails(Reservation, {deletedAt: {$ne: null}}),
+        data,
+      });
+  }
 };
