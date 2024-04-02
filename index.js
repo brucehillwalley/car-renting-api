@@ -1,6 +1,6 @@
 "use strict"
 /* -------------------------------------------------------
-    NODEJS EXPRESS | CLARUSWAY FullStack Team
+    NODEJS EXPRESS | CAR RENTING API
 ------------------------------------------------------- */
 const express = require('express')
 const app = express()
@@ -45,7 +45,7 @@ app.use(require('./src/middlewares/findSearchSortPage'))
 app.all('/', (req, res) => {
     res.send({
         error: false,
-        message: 'Welcome to RENT A CAR API',
+        message: 'Welcome to CAR RENTING API',
         documents: {
             swagger: '/documents/swagger',
             redoc: '/documents/redoc',

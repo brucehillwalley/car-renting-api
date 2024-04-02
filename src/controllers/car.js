@@ -1,6 +1,6 @@
 "use strict";
 /* -------------------------------------------------------
-    NODEJS EXPRESS | CLARUSWAY FullStack Team
+    NODEJS EXPRESS | CAR RENTING API
 ------------------------------------------------------- */
 // Car Controller:
 
@@ -43,7 +43,8 @@ module.exports = {
                 }
             }
         */
-
+    //user zaten login oldugu icin createdId ve updatedId' yi body'den almaya gerek yok
+    // createdId ve updatedId verisini req.user'dan al:
     req.body.createdId = req.user._id;
     req.body.updatedId = req.user._id;
 
@@ -80,10 +81,15 @@ module.exports = {
                 }
             }
         */
+    // user zaten login oldugu icin updatedId' yi body'den almaya gerek yok
     req.body.updatedId = req.user._id;
+
     const data = await Car.updateOne({ _id: req.params.id }, req.body, {
       runValidators: true,
     });
+    //! aşağıdaki mi doğru yoksa yukarıdaki mi?
+    // const data = await Car.updateOne(customFilter, req.body, { runValidators: true })
+    
     res.status(202).send({
       error: false,
       data,

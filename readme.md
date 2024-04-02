@@ -2,7 +2,7 @@
 
 ### ERD:
 
-![ERD](./erdRentACarAPI.png)
+![ERD](./z_ERD.png)
 
 --- 
 

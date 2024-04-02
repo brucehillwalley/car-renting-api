@@ -1,6 +1,6 @@
 "use strict";
 /* -------------------------------------------------------
-    NODEJS EXPRESS | CLARUSWAY FullStack Team
+    NODEJS EXPRESS | CAR RENTING API
 ------------------------------------------------------- */
 // sync():
 
@@ -13,8 +13,9 @@ module.exports = async function () {
   console.log("- Database and all data DELETED!");
   /* REMOVE DATABASE */
 
+  /* CREATE ADMIN */
+  //? admin oluşturulması gerekiyor yoksa users'a post ile create edemeyiz.
   const User = require("../models/user");
-
   await User.create({
     username: "admin",
     password: "aA?123456",
@@ -25,6 +26,7 @@ module.exports = async function () {
     isStaff: true,
     isAdmin: true,
   });
+  /* CREATE ADMIN */
 
   console.log("Admin created!");
 };

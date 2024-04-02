@@ -1,12 +1,13 @@
 "use strict"
 /* -------------------------------------------------------
-    NODEJS EXPRESS | CLARUSWAY FullStack Team
+    NODEJS EXPRESS | CAR RENTING API
 ------------------------------------------------------- */
 const router = require('express').Router()
 /* ------------------------------------------------------- */
 // routes/reservation:
 
 const reservation = require('../controllers/reservation')
+
 const permissions = require('../middlewares/permissions')
 
 // URL: /reservations

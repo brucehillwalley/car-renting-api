@@ -1,6 +1,6 @@
 "use strict"
 /* -------------------------------------------------------
-    NODEJS EXPRESS | CLARUSWAY FullStack Team
+    NODEJS EXPRESS | CAR RENTING API
 ------------------------------------------------------- */
 // Auth Controller
 
@@ -30,7 +30,7 @@ module.exports = {
 
         if ((username || email) && password) {
 
-            // const user = await User.findOne({ username })
+            // client can login with username or email
             const user = await User.findOne({ $or: [{ username }, { email }] })
 
             if (user && user.password == passwordEncrypt(password)) {
