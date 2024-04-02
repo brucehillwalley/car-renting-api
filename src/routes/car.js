@@ -16,6 +16,8 @@ router.route('/')
     .get(car.list)
     .post(permissions.isStaffOrisAdmin, car.create)
 
+router.get('/listDeleted', permissions.isStaffOrisAdmin ,car.listDeleted)
+
 router.route('/:id')
     .get(car.read)
     .put( permissions.isStaffOrisAdmin,car.update)

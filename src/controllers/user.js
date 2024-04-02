@@ -23,11 +23,11 @@ module.exports = {
             `
         */
 
-        const data = await res.getModelList(User)
+        const data = await res.getModelList(User, {deletedAt: null})
 
         res.status(200).send({
             error: false,
-            details: await res.getModelListDetails(User),
+            details: await res.getModelListDetails(User, {deletedAt: null}),
             data
         })
     },
@@ -67,13 +67,13 @@ module.exports = {
             #swagger.summary = "Get Single User"
         */
 
-        // Başka bir kullanıcıyı görmesininengelle
+        // Başka bir kullanıcıyı görmesini engelle
         let customFilter = {}
         if(!req.user.isAdmin && !req.user.isStaff){
             customFilter = { _id: req.user._id }
             
         }
-       const data = await User.findOne({ _id: req.params.id, ...customFilter })
+       const data = await User.findOne({ _id: req.params.id, ...customFilter, deletedAt: null}) // deletedAt alanı null' a gerek olmayabilir
 
         res.status(200).send({
             error: false,
@@ -103,9 +103,9 @@ module.exports = {
          let customFilter = {}
          if(!req.user.isAdmin && !req.user.isStaff){
              customFilter = { _id: req.user._id }
-             
+         // kendini silebilir. 
          }
-            // Admin olmayan isStaff veya isAdmin durumunu değiştiriemez
+            // Admin olmayan isStaff veya isAdmin durumunu değiştirimez
             if(!req.user.isAdmin){
                 delete req.body.isStaff
                 delete req.body.isAdmin
@@ -127,12 +127,42 @@ module.exports = {
             #swagger.summary = "Delete User"
         */
 
-        const data = await User.deleteOne({ _id: req.params.id })
+        // const data = await User.deleteOne({ _id: req.params.id })
 
-        res.status(data.deletedCount ? 204 : 404).send({
-            error: !data.deletedCount,
-            data
-        })
+        // res.status(data.deletedCount ? 204 : 404).send({
+        //     error: !data.deletedCount,
+        //     data
+        // })
+        const data = await User.updateOne({ _id: req.params.id }, { deletedAt: new Date() });
+        if(!data){
+          return res.status(404).send({error: true, message: "User not found"})
+        }
+        res.status(204).send({
+          error: false,
+          data
+        });
+        //? soft delete işlemi yapıldı.
 
     },
+    listDeleted: async (req, res) => {
+        /*
+              #swagger.tags = ["Users"]
+                #swagger.summary = "List Deleted Users"
+                #swagger.description = `
+                    You can send query with endpoint for filter[], search[], sort[], page and limit.
+                    <ul> Examples:
+                        <li>URL/?<b>filter[field1]=value1&filter[field2]=value2</b></li>
+                        <li>URL/?<b>search[field1]=value1&search[field2]=value2</b></li>
+                        <li>URL/?<b>sort[field1]=asc&sort[field2]=desc</b></li>
+                        <li>URL/?<b>page=2&limit=1</b></li>
+                    </ul>
+                `
+            */
+                const data = await res.getModelList(User, {deletedAt: {$ne: null}});
+                res.status(200).send({
+                 error: false,
+                 details: await res.getModelListDetails(User, {deletedAt: {$ne: null}}),
+                 data,
+               });
+      }
 }
