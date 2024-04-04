@@ -22,11 +22,15 @@ module.exports = {
             `
         */
 
-    const data = await res.getModelList(Car, {deletedAt: null});
+    // müsait olmayan araçları listelememek için / (isAvailable: false) 
+    let  customFilter = { isAvailable: true, deletedAt: null }
+
+
+    const data = await res.getModelList(Car, customFilter);
 
     res.status(200).send({
       error: false,
-      details: await res.getModelListDetails(Car, {deletedAt: null}),
+      details: await res.getModelListDetails(Car, customFilter),
       data,
     });
   },

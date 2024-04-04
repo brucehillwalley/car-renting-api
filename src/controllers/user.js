@@ -1,15 +1,14 @@
-"use strict"
+"use strict";
 /* -------------------------------------------------------
-    NODEJS EXPRESS | CLARUSWAY FullStack Team
+    NODEJS EXPRESS | CAR RENTING API
 ------------------------------------------------------- */
 // User Controller:
 
-const User = require('../models/user')
+const User = require("../models/user");
 
 module.exports = {
-
-    list: async (req, res) => {
-        /*
+  list: async (req, res) => {
+    /*
             #swagger.tags = ["Users"]
             #swagger.summary = "List Users"
             #swagger.description = `
@@ -23,17 +22,17 @@ module.exports = {
             `
         */
 
-        const data = await res.getModelList(User, {deletedAt: null})
+    const data = await res.getModelList(User, { deletedAt: null });
 
-        res.status(200).send({
-            error: false,
-            details: await res.getModelListDetails(User, {deletedAt: null}),
-            data
-        })
-    },
+    res.status(200).send({
+      error: false,
+      details: await res.getModelListDetails(User, { deletedAt: null }),
+      data,
+    });
+  },
 
-    create: async (req, res) => {
-        /*
+  create: async (req, res) => {
+    /*
             #swagger.tags = ["Users"]
             #swagger.summary = "Create User"
             #swagger.parameters['body'] = {
@@ -49,41 +48,40 @@ module.exports = {
                 }
             }
         */
-       
-        req.body.isStaff = false
-        req.body.isAdmin = false
 
-        const data = await User.create(req.body)
+    req.body.isStaff = false;
+    req.body.isAdmin = false;
 
-        res.status(201).send({
-            error: false,
-            data
-        })
-    },
+    const data = await User.create(req.body);
 
-    read: async (req, res) => {
-        /*
+    res.status(201).send({
+      error: false,
+      data,
+    });
+  },
+
+  read: async (req, res) => {
+    /*
             #swagger.tags = ["Users"]
             #swagger.summary = "Get Single User"
         */
 
-        // Başka bir kullanıcıyı görmesini engelle
-        let customFilter = {}
-        if(!req.user.isAdmin && !req.user.isStaff){
-            customFilter = { _id: req.user._id }
-            
-        }
-       const data = await User.findOne({ _id: req.params.id, ...customFilter, deletedAt: null}) // deletedAt alanı null' a gerek olmayabilir
+    // Başka bir kullanıcıyı görmesini engelle:
+    let customFilter = { _id: req.params.id };
+    if (!req.user.isAdmin && !req.user.isStaff) {
+      customFilter = { _id: req.user._id };
+    }
 
-        res.status(200).send({
-            error: false,
-            data
-        })
+    const data = await User.findOne({ ...customFilter, deletedAt: null }); // deletedAt alanı null' a gerek olmayabilir
 
-    },
+    res.status(200).send({
+      error: false,
+      data,
+    });
+  },
 
-    update: async (req, res) => {
-        /*
+  update: async (req, res) => {
+    /*
             #swagger.tags = ["Users"]
             #swagger.summary = "Update User"
             #swagger.parameters['body'] = {
@@ -99,53 +97,60 @@ module.exports = {
                 }
             }
         */
-         // Başka bir kullanıcıyı güncellemesini engelle
-         let customFilter = {}
-         if(!req.user.isAdmin && !req.user.isStaff){
-             customFilter = { _id: req.user._id }
-         // kendini silebilir. 
-         }
-            // Admin olmayan isStaff veya isAdmin durumunu değiştirimez
-            if(!req.user.isAdmin){
-                delete req.body.isStaff
-                delete req.body.isAdmin
-            }
 
-        const data = await User.updateOne({ _id: req.params.id, ...customFilter }, req.body, { runValidators: true })
+    // Admin olmayan isStaff veya isAdmin durumunu değiştiremez
+    if (!req.user.isAdmin) {
+      delete req.body.isStaff;
+      delete req.body.isAdmin;
+      delete req.body.deletedAt;
+    }
 
-        res.status(202).send({
-            error: false,
-            data,
-            new: await User.findOne({ _id: req.params.id })
-        })
+    // Başka bir kullanıcıyı güncellemesini engelle:
+    let customFilter = { _id: req.params.id };
+    if (!req.user.isAdmin && !req.user.isStaff) {
+      customFilter = { _id: req.user._id };
+    }
 
-    },
+    const data = await User.updateOne(
+      { ...customFilter },
+      req.body,
+      { runValidators: true }
+    );
 
-    delete: async (req, res) => {
-        /*
+    res.status(202).send({
+      error: false,
+      data,
+      new: await User.findOne({ _id: req.params.id }),
+    });
+  },
+
+  delete: async (req, res) => {
+    /*
             #swagger.tags = ["Users"]
             #swagger.summary = "Delete User"
         */
 
-        // const data = await User.deleteOne({ _id: req.params.id })
+    // const data = await User.deleteOne({ _id: req.params.id })
 
-        // res.status(data.deletedCount ? 204 : 404).send({
-        //     error: !data.deletedCount,
-        //     data
-        // })
-        const data = await User.updateOne({ _id: req.params.id }, { deletedAt: new Date() });
-        if(!data){
-          return res.status(404).send({error: true, message: "User not found"})
-        }
-        res.status(204).send({
-          error: false,
-          data
-        });
-        //? soft delete işlemi yapıldı.
-
-    },
-    listDeleted: async (req, res) => {
-        /*
+    // res.status(data.deletedCount ? 204 : 404).send({
+    //     error: !data.deletedCount,
+    //     data
+    // })
+    const data = await User.updateOne(
+      { _id: req.params.id },
+      { deletedAt: new Date() }
+    );
+    if (!data) {
+      return res.status(404).send({ error: true, message: "User not found" });
+    }
+    res.status(204).send({
+      error: false,
+      data,
+    });
+    //? soft delete işlemi yapıldı.
+  },
+  listDeleted: async (req, res) => {
+    /*
               #swagger.tags = ["Users"]
                 #swagger.summary = "List Deleted Users"
                 #swagger.description = `
@@ -158,11 +163,13 @@ module.exports = {
                     </ul>
                 `
             */
-                const data = await res.getModelList(User, {deletedAt: {$ne: null}});
-                res.status(200).send({
-                 error: false,
-                 details: await res.getModelListDetails(User, {deletedAt: {$ne: null}}),
-                 data,
-               });
-      }
-}
+    const data = await res.getModelList(User, { deletedAt: { $ne: null } });
+    res.status(200).send({
+      error: false,
+      details: await res.getModelListDetails(User, {
+        deletedAt: { $ne: null },
+      }),
+      data,
+    });
+  },
+};
