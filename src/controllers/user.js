@@ -137,19 +137,17 @@ module.exports = {
     //     error: !data.deletedCount,
     //     data
     // })
+    //? kullanıcı zaten silinmiş ise 404 hatası verilir. 
+    const isAlreadyDeletedUser = (await User.findOne({ _id: req.params.id })).isDeleted;
+    if (isAlreadyDeletedUser) {
+      return res.status(404).send({ error: true, message: "User not found" });
+    }
+
     const data = await User.updateOne(
       { _id: req.params.id },
-      { deletedDate: new Date() ,
-        isDeleted: true,
-        deletedId: req.user._id
-      }
-     
+      { deletedDate: new Date(), isDeleted: true, deletedId: req.user._id }
     );
 
-    // kullanıcı zaten silinmiş ise 404 hatası verilir. Yukarıdaki alanlarda değişiklik yapılmadığı için upsertedCount 0 olur.
-    // if (!data.upsertedCount) {
-    //   return res.status(404).send({ error: true, message: "User not found" });
-    // }
     // console.log(data);
     res.status(204).send({
       error: false,
@@ -173,7 +171,6 @@ module.exports = {
             */
     let customFilter = { isDeleted: true };
     const data = await res.getModelList(User, customFilter, [
-    
       { path: "deletedId", select: "username firstName lastName" },
     ]);
     res.status(200).send({
