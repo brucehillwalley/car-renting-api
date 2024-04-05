@@ -22,11 +22,22 @@ module.exports = {
             `
         */
 
-    const data = await res.getModelList(Reservation, {deletedAt: null});
+    //? normal bir kullanıcının başka bir kullanıcı rezervasyonlarını görmesini engelle:
+    let customFilter = { deletedAt: null };
+    if (!req.user.isAdmin && !req.user.isStaff) {
+      customFilter.userId = req.user._id;
+    }
+
+    const data = await res.getModelList(Reservation, customFilter, [
+      { path: "userId", select: "username firstName lastName" },
+      { path: "carId" }, // car ile ilgili tüm detayları görmek için select yapmadık
+      { path: "createdId", select: "username" },
+      { path: "updatedId", select: "username" },
+    ]);
 
     res.status(200).send({
       error: false,
-      details: await res.getModelListDetails(Reservation, {deletedAt: null}),
+      details: await res.getModelListDetails(Reservation, customFilter),
       data,
     });
   },
@@ -43,8 +54,9 @@ module.exports = {
                 }
             }
         */
- // "Admin/staf değilse" veya "UserId göndermişmemişse" req.user'dan al:
- // "Admin/staf herhangi başkası için reserve edebilir
+
+    //? "Admin/staf değilse" veya "UserId göndermişmemişse" req.user'dan al:
+    //? "Admin/staf herhangi başkası için reserve edebilir
     if ((!req.body.isAdmin && !req.body.isStaff) || !req.body?.userId) {
       req.body.userId = req.user._id;
     }
@@ -52,12 +64,32 @@ module.exports = {
     req.body.createdId = req.user._id;
     req.body.updatedId = req.user._id;
 
+    //? Kullanıcının bir tarih aralığında birden fazla rezervasyonu olmayacak: bir userın aynı anda iki araç kiralanmasına izin verilmiyor.
+    const userReservationInDates = await Reservation.findOne({
+      userId: req.body.userId,
+     // carId: req.body.carId, // başka bir arabayı kiralayabilmesi için eklenebilir
+      $nor: [
+        { startDate: { $gt: req.body.endDate } },
+        { endDate: { $lt: req.body.startDate } },
+      ],
+    });
+
+if(userReservationInDates){
+	res.errorStatusCode = 400
+ 	throw new Error(
+ 		'It cannot be added because there is another reservation with the same date.',
+ 		{ cause: { userReservationInDates: userReservationInDates } }
+ 	)
+
+}else{
     const data = await Reservation.create(req.body);
 
     res.status(201).send({
       error: false,
       data,
     });
+}
+  
   },
 
   read: async (req, res) => {
@@ -65,9 +97,30 @@ module.exports = {
             #swagger.tags = ["Reservations"]
             #swagger.summary = "Get Single Reservation"
         */
-    // deletedAt alanı null ise rezervasyon var
-    const data = await Reservation.findOne({ _id: req.params.id }, {deletedAt: null});
-   
+
+    //? normal bir kullanıcının başka bir kullanıcı rezervasyonlarını görmesini engelle:
+    let customFilter = { deletedAt: null };
+    if (!req.user.isAdmin && !req.user.isStaff) {
+      customFilter.userId = req.user._id;
+    }
+
+    // deletedAt alanı null ise rezervasyon var. soft delete edilmemiş
+    const data = await Reservation.findOne({
+      _id: req.params.id, //! rezervasyonun id'si
+      ...customFilter,
+    }).populate([
+      { path: "userId", select: "username firstName lastName" },
+      { path: "carId" },
+      { path: "createdId", select: "username" },
+      { path: "updatedId", select: "username" },
+    ]);
+
+    //? kayıt bulunamadı
+    if (!data)
+      return res
+        .status(404)
+        .send({ error: true, message: "Reservation not found" });
+
     res.status(200).send({
       error: false,
       data,
@@ -86,11 +139,19 @@ module.exports = {
                 }
             }
         */
-  // Admin değilse rezervasyona ait userId değiştirilemez:
+    // Admin değilse rezervasyona ait userId değiştirilemez:
     if (!req.body.isAdmin) {
       delete req.body.userId;
     }
+
+    // updatedId verisini req.user'dan al:
     req.body.updatedId = req.user._id;
+
+    const data = await Reservation.updateOne(
+      { _id: req.params.id }, //! rezervasyonun id'si
+      req.body,
+      { runValidators: true }
+    );
 
     res.status(202).send({
       error: false,
@@ -112,16 +173,20 @@ module.exports = {
     //   data,
     // });
 
-    const data = await Reservation.updateOne({ _id: req.params.id }, { deletedAt: new Date() });
-    if(!data){
-      return res.status(404).send({error: true, message: "Reservation not found"})
+    const data = await Reservation.updateOne(
+      { _id: req.params.id },
+      { deletedAt: new Date() }
+    );
+    if (!data) {
+      return res
+        .status(404)
+        .send({ error: true, message: "Reservation not found" });
     }
     res.status(204).send({
       error: false,
-      data
+      data,
     });
     //? soft delete işlemi yapıldı.
-
   },
   listDeleted: async (req, res) => {
     /*
@@ -136,12 +201,16 @@ module.exports = {
                     <li>URL/?<b>page=2&limit=1</b></li>
                 </ul>
             `
-        */    
-       const data = await res.getModelList(Reservation, {deletedAt: {$ne: null}});
-       res.status(200).send({
-        error: false,
-        details: await res.getModelListDetails(Reservation, {deletedAt: {$ne: null}}),
-        data,
-      });
-  }
+        */
+    const data = await res.getModelList(Reservation, {
+      deletedAt: { $ne: null },
+    });
+    res.status(200).send({
+      error: false,
+      details: await res.getModelListDetails(Reservation, {
+        deletedAt: { $ne: null },
+      }),
+      data,
+    });
+  },
 };
