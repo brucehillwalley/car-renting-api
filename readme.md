@@ -1,9 +1,12 @@
 # RENT A CAR API
 #eklenecekler
-  - deletedAt fields
+  - soft delete  
   - reservazyon iptali onayı
   - 
-
+#eklenenler
+  - isDeleted, deletedId, deletedDate alanları User modele eklendi controller' ında gerekli değişiklik yapıldı
+  - 
+  -
 ### ERD:
 
 ![ERD](./z_ERD.png)
