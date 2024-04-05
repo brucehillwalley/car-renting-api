@@ -15,7 +15,7 @@ router.route('/')
     .get(permissions.isStaffOrisAdmin, user.list)
     .post(user.create)
 
-router.get('/listDeleted', permissions.isStaffOrisAdmin ,user.listDeleted)
+router.get('/listdeleted', permissions.isStaffOrisAdmin ,user.listDeleted)
 
 router.route('/:id')
     .get(permissions.isLogin, user.read)

@@ -1,6 +1,6 @@
 "use strict"
 /* -------------------------------------------------------
-    NODEJS EXPRESS | CLARUSWAY FullStack Team
+    NODEJS EXPRESS | CAR RENTING API
 ------------------------------------------------------- */
 const { mongoose } = require('../configs/dbConnection')
 /* ------------------------------------------------------- *
@@ -78,11 +78,22 @@ const UserSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
-    deletedAt:{     //?SOFT DELETE
+    deletedDate:{     //?SOFT DELETE
         type:Date,
         default:null,
 
+    },
+    deletedId:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:'User',
+        default:null
+    },
+    isDeleted:{
+        type:Boolean,
+        default:false
     }
+
+
 
 }, { collection: 'users', timestamps: true })
 

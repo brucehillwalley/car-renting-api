@@ -22,11 +22,11 @@ module.exports = {
             `
         */
 
-    const data = await res.getModelList(User, { deletedAt: null });
+    const data = await res.getModelList(User, { isDeleted: false });
 
     res.status(200).send({
       error: false,
-      details: await res.getModelListDetails(User, { deletedAt: null }),
+      details: await res.getModelListDetails(User, { isDeleted: false }),
       data,
     });
   },
@@ -49,6 +49,7 @@ module.exports = {
             }
         */
 
+    //? ilk oluşturulurken yetki minimum olarak kullanıcıya verilir. Daha sonra güncellenir
     req.body.isStaff = false;
     req.body.isAdmin = false;
 
@@ -72,7 +73,7 @@ module.exports = {
       customFilter = { _id: req.user._id };
     }
 
-    const data = await User.findOne({ ...customFilter, deletedAt: null }); // deletedAt alanı null' a gerek olmayabilir
+    const data = await User.findOne({ ...customFilter, isDeleted: false }); // isDeleted gerek olmayabilir
 
     res.status(200).send({
       error: false,
@@ -102,7 +103,9 @@ module.exports = {
     if (!req.user.isAdmin) {
       delete req.body.isStaff;
       delete req.body.isAdmin;
-      delete req.body.deletedAt;
+      delete req.body.isDeleted;
+      delete req.body.DeletedId;
+      delete req.body.DeletedDate;
     }
 
     // Başka bir kullanıcıyı güncellemesini engelle:
@@ -111,11 +114,9 @@ module.exports = {
       customFilter = { _id: req.user._id };
     }
 
-    const data = await User.updateOne(
-      { ...customFilter },
-      req.body,
-      { runValidators: true }
-    );
+    const data = await User.updateOne({ ...customFilter }, req.body, {
+      runValidators: true,
+    });
 
     res.status(202).send({
       error: false,
@@ -138,11 +139,18 @@ module.exports = {
     // })
     const data = await User.updateOne(
       { _id: req.params.id },
-      { deletedAt: new Date() }
+      { deletedDate: new Date() ,
+        isDeleted: true,
+        deletedId: req.user._id
+      }
+     
     );
-    if (!data) {
-      return res.status(404).send({ error: true, message: "User not found" });
-    }
+
+    // kullanıcı zaten silinmiş ise 404 hatası verilir. Yukarıdaki alanlarda değişiklik yapılmadığı için upsertedCount 0 olur.
+    // if (!data.upsertedCount) {
+    //   return res.status(404).send({ error: true, message: "User not found" });
+    // }
+    // console.log(data);
     res.status(204).send({
       error: false,
       data,
@@ -163,12 +171,14 @@ module.exports = {
                     </ul>
                 `
             */
-    const data = await res.getModelList(User, { deletedAt: { $ne: null } });
+    let customFilter = { isDeleted: true };
+    const data = await res.getModelList(User, customFilter, [
+    
+      { path: "deletedId", select: "username firstName lastName" },
+    ]);
     res.status(200).send({
       error: false,
-      details: await res.getModelListDetails(User, {
-        deletedAt: { $ne: null },
-      }),
+      details: await res.getModelListDetails(User, customFilter),
       data,
     });
   },
