@@ -72,6 +72,7 @@ module.exports = {
         { startDate: { $gt: req.body.endDate } },
         { endDate: { $lt: req.body.startDate } },
       ],
+      deletedAt: null,
     });
 
 if(userReservationInDates){
