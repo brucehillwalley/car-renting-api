@@ -23,7 +23,7 @@ module.exports = {
         */
 
     //? normal bir kullanıcının başka bir kullanıcı rezervasyonlarını görmesini engelle:
-    let customFilter = { deletedAt: null };
+    let customFilter = { isDeleted: false };
     if (!req.user.isAdmin && !req.user.isStaff) {
       customFilter.userId = req.user._id;
     }
@@ -72,7 +72,7 @@ module.exports = {
         { startDate: { $gt: req.body.endDate } },
         { endDate: { $lt: req.body.startDate } },
       ],
-      deletedAt: null,
+      isDeleted: false,
     });
 
 if(userReservationInDates){
@@ -100,12 +100,12 @@ if(userReservationInDates){
         */
 
     //? normal bir kullanıcının başka bir kullanıcı rezervasyonlarını görmesini engelle:
-    let customFilter = { deletedAt: null };
+    let customFilter = { isDeleted: false };
     if (!req.user.isAdmin && !req.user.isStaff) {
       customFilter.userId = req.user._id;
     }
 
-    // deletedAt alanı null ise rezervasyon var. soft delete edilmemiş
+    // isDeleted alanı false ise rezervasyon var. soft delete edilmemiş
     const data = await Reservation.findOne({
       _id: req.params.id, //! rezervasyonun id'si
       ...customFilter,
@@ -173,22 +173,26 @@ if(userReservationInDates){
     //   error: !data.deletedCount,
     //   data,
     // });
+ //? rezervasyon zaten silinmiş ise 404 hatası verilir. 
+ const isAlreadyDeletedReservation = (await Reservation.findOne({ _id: req.params.id })).isDeleted;
+ if (isAlreadyDeletedReservation) {
+   return res.status(404).send({ error: true, message: "Reservation not found" });
+ }
 
-    const data = await Reservation.updateOne(
-      { _id: req.params.id },
-      { deletedAt: new Date() }
-    );
-    if (!data) {
-      return res
-        .status(404)
-        .send({ error: true, message: "Reservation not found" });
-    }
-    res.status(204).send({
-      error: false,
-      data,
-    });
-    //? soft delete işlemi yapıldı.
-  },
+ const data = await Reservation.updateOne(
+   { _id: req.params.id },
+   { deletedDate: new Date(), isDeleted: true, deletedId: req.user._id }
+ );
+
+ // console.log(data);
+ res.status(204).send({
+   error: false,
+   data,
+ });
+ //? soft delete işlemi yapıldı.
+},
+   
+
   listDeleted: async (req, res) => {
     /*
             #swagger.tags = ["Reservations"]
@@ -204,12 +208,16 @@ if(userReservationInDates){
             `
         */
     const data = await res.getModelList(Reservation, {
-      deletedAt: { $ne: null },
-    });
+      isDeleted: true,
+    }, [
+      { path: "createdId", select: "username" },
+      { path: "updatedId", select: "username" },
+      { path: "deletedId", select: "username" },
+    ]);
     res.status(200).send({
       error: false,
       details: await res.getModelListDetails(Reservation, {
-        deletedAt: { $ne: null },
+        isDeleted: true,
       }),
       data,
     });

@@ -11,7 +11,7 @@ const reservation = require('../controllers/reservation')
 const permissions = require('../middlewares/permissions')
 
 // URL: /reservations
-// listDeleted: deletedAt' e tarih girilerek soft delete yapılanları listeler
+// listDeleted: isDeleted: true olarak soft delete yapılanları listeler
 router.get('/listdeleted', permissions.isStaffOrisAdmin ,reservation.listDeleted)
 
 router.route('/')
