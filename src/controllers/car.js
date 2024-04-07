@@ -23,6 +23,7 @@ module.exports = {
             `
         */
 
+    /*------------------------------------------------------- */
     //? daha sonra aşağıdaki yorum satırlarını ekleyebilirsin.........
     /* QUERY'DEN ALINAN TARİH ARALIĞINA GÖRE GÖRE LİSTELEME */
     // if (req.query.startDate && req.query.endDate) {
@@ -38,10 +39,13 @@ module.exports = {
     // if (req.query.model) {
     //   customFilter = { ...customFilter, ...{ model: { $regex: req.query.model, $options: "i" } } }
     // }
+    /*------------------------------------------------------- */
 
-    // müsait olmayan araçları listelememek için / (yani isAvailable: false olanlar)
+
+    // müsait olmayan (tamir vs.) araçları listelememek için / (yani isAvailable: false olanlar)
     let customFilter = { isAvailable: true, isDeleted: false };
 
+    //! İSTEK BODY'DEN DEĞİL GET İSTEĞİ OLDUĞU İÇİN QUERY İLE GELECEK
     /* QUERY'DEN ALINAN TARİH ARALIĞINA GÖRE GÖRE LİSTELEME */
     // List by dateFilter:
     // URL?startDate=2024-01-01&endDate=2024-01-10
