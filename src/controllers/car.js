@@ -40,7 +40,7 @@ module.exports = {
     // }
 
     // müsait olmayan araçları listelememek için / (yani isAvailable: false olanlar)
-    let customFilter = { isAvailable: true, deletedAt: null };
+    let customFilter = { isAvailable: true, isDeleted: false };
 
     /* QUERY'DEN ALINAN TARİH ARALIĞINA GÖRE GÖRE LİSTELEME */
     // List by dateFilter:
@@ -54,7 +54,8 @@ module.exports = {
       //* endDate var olan rezervasyonların startDate' inden küçük olmalı
       //* rezerve olmayan kayıt olmadığı için yani sadece rezervasyon kaydı tutuluyor
 
-      const reservedCars = await Reservation.find(
+      const reservedCars = await Reservation.find({ 
+        isDeleted: false },
         {
           $nor: [
             //? aşağıdaki ifadeler or ile yapılsa idi talep edilen tarih aralığının dışındakileri verecekti.
@@ -135,7 +136,7 @@ module.exports = {
         */
     const data = await Car.findOne(
       { _id: req.params.id },
-      { deletedAt: null },
+      { isDeleted: false },
       [
         { path: "createdId", select: "username" },
         { path: "updatedId", select: "username" },
@@ -161,7 +162,7 @@ module.exports = {
             }
         */
     // user zaten login oldugu icin updatedId' yi body'den almaya gerek yok
-    // sadece staff veya admin güncelleyeblir permission var
+    // sadece staff veya admin güncelleyebilir permission var
     req.body.updatedId = req.user._id;
 
     const data = await Car.updateOne({ _id: req.params.id }, req.body, {
@@ -188,18 +189,23 @@ module.exports = {
     // res.status(data.deletedCount ? 204 : 404).send({
     //   error: !data.deletedCount,
     //   data,
-    const data = await Car.updateOne(
-      { _id: req.params.id },
-      { deletedAt: new Date() }
-    );
-    if (!data) {
-      return res.status(404).send({ error: true, message: "Car not found" });
-    }
-    res.status(204).send({
-      error: false,
-      data,
-    });
-    //? soft delete işlemi yapıldı.
+     //? car zaten silinmiş ise 404 hatası verilir. 
+     const isAlreadyDeletedCar = (await Car.findOne({ _id: req.params.id })).isDeleted;
+     if (isAlreadyDeletedCar) {
+       return res.status(404).send({ error: true, message: "User not found" });
+     }
+ 
+     const data = await Car.updateOne(
+       { _id: req.params.id },
+       { deletedDate: new Date(), isDeleted: true, deletedId: req.user._id }
+     );
+ 
+     // console.log(data);
+     res.status(204).send({
+       error: false,
+       data,
+     });
+     //? soft delete işlemi yapıldı.
   },
   listDeleted: async (req, res) => {
     /*
@@ -215,10 +221,14 @@ module.exports = {
                 </ul>
             `
         */
-    const data = await res.getModelList(Car, { deletedAt: { $ne: null } });
+    const data = await res.getModelList(Car, {isDeleted: true}, [
+      { path: "createdId", select: "username" },
+      { path: "updatedId", select: "username" },
+      { path: "deletedId", select: "username" },
+    ]);
     res.status(200).send({
       error: false,
-      details: await res.getModelListDetails(Car, { deletedAt: { $ne: null } }),
+      details: await res.getModelListDetails(Car, {isDeleted: true}),
       data,
     });
   },
